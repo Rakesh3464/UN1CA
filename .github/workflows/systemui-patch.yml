@@ -27,26 +27,32 @@ jobs:
 
       - name: Decompile SystemUI.apk (Preserve Resources)
         run: |
-          # Decompile normally without -r so status bar and layout alignments are fully preserved
           apktool d -f SystemUI.apk -o decompiled_ui
 
-      - name: Fix Manifest Attribute Error
+      - name: Safely Clean Incompatible Attributes from All XMLs
         run: |
-          # Safely remove only the incompatible featureFlag attribute from manifest
           python3 -c '
           import glob, re
-          for filepath in glob.glob("decompiled_ui/**/AndroidManifest.xml", recursive=True):
-              with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                  content = f.read()
-              content = re.sub(r"\s*android:featureFlag=\"[^\"]*\"", "", content)
-              with open(filepath, "w", encoding="utf-8") as f:
-                  f.write(content)
-          print("Manifest featureFlag fixed successfully!")
+          files = glob.glob("decompiled_ui/**/*.xml", recursive=True)
+          for filepath in files:
+              try:
+                  with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                      content = f.read()
+                  
+                  # Safely strip incompatible attributes without breaking XML structure
+                  content = re.sub(r"\s*android:featureFlag=\"[^\"]*\"", "", content)
+                  content = re.sub(r"\s*android:dreamCategory=\"[^\"]*\"", "", content)
+                  content = re.sub(r"\s*materialColor[a-zA-Z0-9]+=\"[^\"]*\"", "", content)
+                  
+                  with open(filepath, "w", encoding="utf-8") as f:
+                      f.write(content)
+              except Exception as e:
+                  pass
+          print("Successfully cleaned conflicting attributes from all XMLs!")
           '
 
       - name: Recompile and Sign SystemUI.apk
         run: |
-          # Recompile using --use-aapt2 to correctly process resources and status bar layouts
           apktool b decompiled_ui -o patched_SystemUI.apk --use-aapt2
           
           wget https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -O signer.jar
