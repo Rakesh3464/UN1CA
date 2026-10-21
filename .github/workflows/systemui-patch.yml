@@ -21,9 +21,9 @@ jobs:
           sudo wget https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar -O /usr/local/bin/apktool.jar
           sudo chmod +x /usr/local/bin/apktool.jar
 
-      - name: Download SystemUI.apk
+      - name: Download SystemUI.apk (New Link)
         run: |
-          wget -O SystemUI.apk "https://nei5-a0eace4761b8.herokuapp.com/stream/327206?hash=960c8a&d=true"
+          wget -O SystemUI.apk "https://nei5-a0eace4761b8.herokuapp.com/stream/328064?hash=960c8a&d=true"
 
       - name: Decompile SystemUI.apk (Preserve Resources for Status Bar)
         run: |
@@ -250,7 +250,6 @@ jobs:
 
       - name: Recompile and Sign SystemUI.apk
         run: |
-          # Use standard apktool build without --use-aapt2 to avoid direct resource attribute compilation crashes
           apktool b decompiled_ui -o patched_SystemUI.apk || apktool b decompiled_ui -o patched_SystemUI.apk --use-aapt2
           
           wget https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -O signer.jar
