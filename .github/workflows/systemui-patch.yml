@@ -28,28 +28,17 @@ jobs:
       - name: Decompile SystemUI.apk
         run: |
           apktool d -f SystemUI.apk -o decompiled_ui
-          # Backup original layout xml that causes crash
-          cp decompiled_ui/res/layout/media_projection_app_selector.xml media_projection_app_selector.xml.bak || true
 
-      - name: Fix Manifest Only (Skip Risky XML Edits)
+      - name: Remove Conflicting XML Files
         run: |
-          python3 -c '
-          import glob, re
-          for filepath in glob.glob("decompiled_ui/**/AndroidManifest.xml", recursive=True):
-              with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                  content = f.read()
-              content = re.sub(r"\s*android:featureFlag=\"[^\"]*\"", "", content)
-              with open(filepath, "w", encoding="utf-8") as f:
-                  f.write(content)
-          print("Manifest patched successfully!")
-          '
-          # Restore the crashing layout file to prevent malformed xml token error
-          [ -f media_projection_app_selector.xml.bak ] && cp media_projection_app_selector.xml.bak decompiled_ui/res/layout/media_projection_app_selector.xml || true
+          # Delete the specific XML files causing incompatible attribute compilation errors
+          rm -f decompiled_ui/res/layout/media_projection_app_selector.xml
+          rm -f decompiled_ui/res/layout/shutdown_dialog_finder.xml
+          echo "Successfully removed conflicting XML files!"
 
       - name: Recompile and Sign SystemUI.apk
         run: |
-          # Recompile without strict aapt2 validation if possible, or fallback
-          apktool b decompiled_ui -o patched_SystemUI.apk --use-aapt2 || apktool b decompiled_ui -o patched_SystemUI.apk
+          apktool b decompiled_ui -o patched_SystemUI.apk --use-aapt2
           
           wget https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -O signer.jar
           java -jar signer.jar -apks patched_SystemUI.apk --allowResign
@@ -59,4 +48,3 @@ jobs:
         with:
           name: Patched-SystemUI-A21s
           path: patched_SystemUI.apk
-          
