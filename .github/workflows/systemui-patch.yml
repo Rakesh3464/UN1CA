@@ -34,7 +34,7 @@ jobs:
           python3 -c '
           import glob
           for filepath in glob.glob("decompiled_ui/**/AndroidManifest.xml", recursive=True):
-              with open(filepath, "r", encoding="utf-8") as f:
+              with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                   lines = f.readlines()
               new_lines = [line for line in lines if "featureFlag" not in line]
               with open(filepath, "w", encoding="utf-8") as f:
@@ -54,3 +54,4 @@ jobs:
         with:
           name: Patched-SystemUI-A21s
           path: patched_SystemUI.apk
+          
