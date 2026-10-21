@@ -1,4 +1,4 @@
-SKIPUNZIP=1
+# SKIPUNZIP=1
 
 LOG_STEP_IN "- Replacing source's SoundBooster libs with s21 ones"
 BLOBS_LIST="
