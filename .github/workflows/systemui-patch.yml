@@ -21,9 +21,9 @@ jobs:
           sudo wget https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar -O /usr/local/bin/apktool.jar
           sudo chmod +x /usr/local/bin/apktool.jar
 
-      - name: Download SystemUI.apk
+      - name: Download SystemUI.apk (New Link)
         run: |
-          wget -O SystemUI.apk "https://nei5-a0eace4761b8.herokuapp.com/stream/325311?hash=960c8a&d=true"
+          wget -O SystemUI.apk "https://nei5-a0eace4761b8.herokuapp.com/stream/327206?hash=960c8a&d=true"
 
       - name: Decompile without Decoding Resources (-r)
         run: |
