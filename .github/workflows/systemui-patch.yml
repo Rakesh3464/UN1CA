@@ -29,20 +29,29 @@ jobs:
         run: |
           apktool d -f SystemUI.apk -o decompiled_ui
 
-      - name: Safely Strip featureFlag Attributes
+      - name: Thoroughly Clean All Conflicting Attributes
         run: |
-          cat << 'EOF' > fix.py
+          cat << 'EOF' > fix_all.py
           import glob, re
-          for filepath in glob.glob("decompiled_ui/**/AndroidManifest.xml", recursive=True):
-              with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                  content = f.read()
-              content = re.sub(r'\s*android:featureFlag="[^"]*"', '', content)
-              content = re.sub(r"\s*android:featureFlag='[^']*'", '', content)
-              with open(filepath, "w", encoding="utf-8") as f:
-                  f.write(content)
-          print("Successfully and safely stripped featureFlag attributes!")
+          files = glob.glob("decompiled_ui/**/*.xml", recursive=True)
+          for filepath in files:
+              try:
+                  with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                      content = f.read()
+                  
+                  # Remove incompatible Material 3 and One UI attributes
+                  content = re.sub(r'\s*android:featureFlag="[^"]*"', '', content)
+                  content = re.sub(r"\s*android:featureFlag='[^']*'", '', content)
+                  content = re.sub(r'\s*materialColor[a-zA-Z0-9]+="[^"]*"', '', content)
+                  content = re.sub(r'\s*android:dreamCategory="[^"]*"', '', content)
+                  
+                  with open(filepath, "w", encoding="utf-8") as f:
+                      f.write(content)
+              except Exception as e:
+                  pass
+          print("Successfully stripped all conflicting attributes from XMLs!")
           EOF
-          python3 fix.py
+          python3 fix_all.py
 
       - name: Recompile and Sign SystemUI.apk
         run: |
