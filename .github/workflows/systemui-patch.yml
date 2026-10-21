@@ -28,15 +28,14 @@ jobs:
       - name: Decompile SystemUI.apk
         run: |
           apktool d -f SystemUI.apk -o decompiled_ui
+          # Backup original manifest before any modifications
+          cp decompiled_ui/AndroidManifest.xml AndroidManifest.xml.bak
 
-      - name: Bypass Manifest Validation
+      - name: Restore Clean Manifest for Recompilation
         run: |
-          # Disable SDK/Manifest strict validation in apktool.yml to stop featureFlag crash
-          if [ -f "decompiled_ui/apktool.yml" ]; then
-            sed -i 's/doNotCompress:/isFramework: false\ndoNotCompress:/g' decompiled_ui/apktool.yml
-          fi
-          # Clear the offending featureFlag lines safely without breaking xml tags
-          find decompiled_ui/ -name "AndroidManifest.xml" -exec sed -i '/featureFlag/d' {} +
+          # Restore the original manifest to prevent any tag mismatch errors, 
+          # and let apktool handle it with aapt2 flags
+          cp AndroidManifest.xml.bak decompiled_ui/AndroidManifest.xml
 
       - name: Recompile and Sign SystemUI.apk
         run: |
