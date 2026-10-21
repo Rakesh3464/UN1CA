@@ -28,34 +28,28 @@ jobs:
       - name: Decompile SystemUI.apk
         run: |
           apktool d -f SystemUI.apk -o decompiled_ui
+          # Backup original layout xml that causes crash
+          cp decompiled_ui/res/layout/media_projection_app_selector.xml media_projection_app_selector.xml.bak || true
 
-      - name: Thoroughly Clean All Conflicting Attributes
+      - name: Fix Manifest Only (Skip Risky XML Edits)
         run: |
-          cat << 'EOF' > fix_all.py
+          python3 -c '
           import glob, re
-          files = glob.glob("decompiled_ui/**/*.xml", recursive=True)
-          for filepath in files:
-              try:
-                  with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                      content = f.read()
-                  
-                  # Remove incompatible Material 3 and One UI attributes
-                  content = re.sub(r'\s*android:featureFlag="[^"]*"', '', content)
-                  content = re.sub(r"\s*android:featureFlag='[^']*'", '', content)
-                  content = re.sub(r'\s*materialColor[a-zA-Z0-9]+="[^"]*"', '', content)
-                  content = re.sub(r'\s*android:dreamCategory="[^"]*"', '', content)
-                  
-                  with open(filepath, "w", encoding="utf-8") as f:
-                      f.write(content)
-              except Exception as e:
-                  pass
-          print("Successfully stripped all conflicting attributes from XMLs!")
-          EOF
-          python3 fix_all.py
+          for filepath in glob.glob("decompiled_ui/**/AndroidManifest.xml", recursive=True):
+              with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                  content = f.read()
+              content = re.sub(r"\s*android:featureFlag=\"[^\"]*\"", "", content)
+              with open(filepath, "w", encoding="utf-8") as f:
+                  f.write(content)
+          print("Manifest patched successfully!")
+          '
+          # Restore the crashing layout file to prevent malformed xml token error
+          [ -f media_projection_app_selector.xml.bak ] && cp media_projection_app_selector.xml.bak decompiled_ui/res/layout/media_projection_app_selector.xml || true
 
       - name: Recompile and Sign SystemUI.apk
         run: |
-          apktool b decompiled_ui -o patched_SystemUI.apk --use-aapt2
+          # Recompile without strict aapt2 validation if possible, or fallback
+          apktool b decompiled_ui -o patched_SystemUI.apk --use-aapt2 || apktool b decompiled_ui -o patched_SystemUI.apk
           
           wget https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -O signer.jar
           java -jar signer.jar -apks patched_SystemUI.apk --allowResign
