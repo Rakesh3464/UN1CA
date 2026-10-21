@@ -1,39 +1,39 @@
-name: Patch SystemUI.apk
+name: Patch SystemUI
 
 on:
   workflow_dispatch:
 
 jobs:
-  patch:
+  build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
         with:
           ref: 'a21s'
 
-      - name: Install Apktool & Java
+      - name: Install Tools
         run: |
           sudo apt-get update
           sudo apt-get install -y openjdk-17-jdk apktool wget
 
-      - name: Download SystemUI.apk from GoFile
+      - name: Download SystemUI from GoFile
         run: |
           wget -O SystemUI.apk "https://store-eu-par-13.gofile.io/download/web/f7dc38b8-752b-45a9-9ef2-7d46f4e57c0e/SystemUI.apk"
 
-      - name: Decompile SystemUI.apk
+      - name: Decompile APK
         run: |
-          apktool d -f SystemUI.apk -o decompiled_ui
+          apktool d -f SystemUI.apk -o decompiled
 
-      - name: Recompile and Sign SystemUI.apk
+      - name: Recompile & Sign APK
         run: |
-          apktool b decompiled_ui -o patched_SystemUI.apk
+          apktool b decompiled -o patched.apk
           wget https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -O signer.jar
-          java -jar signer.jar -apks patched_SystemUI.apk --allowResign
+          java -jar signer.jar -apks patched.apk --allowResign
 
-      - name: Upload Patched SystemUI
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Patched-SystemUI-A21s
-          path: patched_SystemUI.apk
+          path: patched.apk
           
