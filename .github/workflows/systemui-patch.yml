@@ -28,14 +28,21 @@ jobs:
       - name: Decompile SystemUI.apk
         run: |
           apktool d -f SystemUI.apk -o decompiled_ui
-          # Backup original manifest before any modifications
-          cp decompiled_ui/AndroidManifest.xml AndroidManifest.xml.bak
 
-      - name: Restore Clean Manifest for Recompilation
+      - name: Safely Strip featureFlag Attributes
         run: |
-          # Restore the original manifest to prevent any tag mismatch errors, 
-          # and let apktool handle it with aapt2 flags
-          cp AndroidManifest.xml.bak decompiled_ui/AndroidManifest.xml
+          python3 -c '
+          import glob, re
+          for filepath in glob.glob("decompiled_ui/**/AndroidManifest.xml", recursive=True):
+              with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                  content = f.read()
+              # Safely replace only the attribute without breaking the xml tags or application block
+              content = re.sub(r"\s*android:featureFlag=\"[^\"]*\"", "", content)
+              content = re.sub(r"\s*android:featureFlag=\'[^\']*\'", "", content)
+              with open(filepath, "w", encoding="utf-8") as f:
+                  f.write(content)
+          print("Successfully and safely stripped featureFlag attributes!")
+          '
 
       - name: Recompile and Sign SystemUI.apk
         run: |
