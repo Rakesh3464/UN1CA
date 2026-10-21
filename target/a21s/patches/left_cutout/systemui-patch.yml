@@ -2,10 +2,6 @@ name: Patch SystemUI.apk
 
 on:
   workflow_dispatch:
-    inputs:
-      apk_url:
-        description: 'Direct Download Link of your SystemUI.apk (or zip)'
-        required: true
 
 jobs:
   patch:
@@ -13,6 +9,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: 'a21s'
 
       - name: Set up Java & Apktool
         run: |
@@ -22,33 +20,23 @@ jobs:
           wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.9.3.jar -O /usr/local/bin/apktool.jar
           chmod +x /usr/local/bin/apktool /usr/local/bin/apktool.jar
 
-      - name: Download SystemUI.apk
+      - name: Download SystemUI.apk from GoFile
         run: |
-          wget -O SystemUI.apk "${{ github.event.inputs.apk_url }}"
+          wget -O SystemUI.apk "https://store-eu-par-13.gofile.io/download/web/f7dc38b8-752b-45a9-9ef2-7d46f4e57c0e/SystemUI.apk"
 
       - name: Decompile SystemUI.apk
         run: |
           apktool d -f SystemUI.apk -o decompiled_ui
 
-      - name: Apply Left Cutout Changes (Modify XML/Smali)
-        run: |
-          # ಇಲ್ಲಿ ನಿಮ್ಮ left_cutout ಬದಲಾವಣೆಗಳನ್ನು ಅಥವಾ XML ಬದಲಾಯಿಸುವ ಸ್ಕ್ರಿಪ್ಟ್ ಹಾಕಿ
-          echo "Applying modifications..."
-          # ಉದಾಹರಣೆಗೆ dimens.xml ಫೈಲ್ ಎಡಿಟ್ ಮಾಡುವುದು ಅಥವಾ ಕಾಪಿ ಮಾಡುವುದು
-          if [ -f "target/a21s/patches/left_cutout/dimens.xml" ]; then
-            cp target/a21s/patches/left_cutout/dimens.xml decompiled_ui/res/values/dimens.xml
-          fi
-
       - name: Recompile and Sign SystemUI.apk
         run: |
           apktool b decompiled_ui -o patched_SystemUI.apk
-          # ತ್ಯಾಜ್ಯ ಸಹಿ (Sign) ಹಾಕಲು uber-apk-signer ಬಳಸಬಹುದು ಅಥವಾ ಡಿಬಗ್ ಕೀ ಬಳಸಿ
           wget https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -O signer.jar
           java -jar signer.jar -apks patched_SystemUI.apk --allowResign
 
       - name: Upload Patched SystemUI
         uses: actions/upload-artifact@v4
         with:
-          name: Patched-SystemUI
+          name: Patched-SystemUI-A21s
           path: patched_SystemUI.apk
           
