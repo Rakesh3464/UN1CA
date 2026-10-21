@@ -31,18 +31,18 @@ jobs:
 
       - name: Safely Strip featureFlag Attributes
         run: |
-          python3 -c '
+          cat << 'EOF' > fix.py
           import glob, re
           for filepath in glob.glob("decompiled_ui/**/AndroidManifest.xml", recursive=True):
               with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                   content = f.read()
-              # Safely replace only the attribute without breaking the xml tags or application block
-              content = re.sub(r"\s*android:featureFlag=\"[^\"]*\"", "", content)
-              content = re.sub(r"\s*android:featureFlag=\'[^\']*\'", "", content)
+              content = re.sub(r'\s*android:featureFlag="[^"]*"', '', content)
+              content = re.sub(r"\s*android:featureFlag='[^']*'", '', content)
               with open(filepath, "w", encoding="utf-8") as f:
                   f.write(content)
           print("Successfully and safely stripped featureFlag attributes!")
-          '
+          EOF
+          python3 fix.py
 
       - name: Recompile and Sign SystemUI.apk
         run: |
