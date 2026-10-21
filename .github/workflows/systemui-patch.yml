@@ -15,7 +15,7 @@ jobs:
       - name: Install Tools & Java
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk wget
+          sudo apt-get install -y openjdk-17-jdk wget git
           sudo wget https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool -O /usr/local/bin/apktool
           sudo chmod +x /usr/local/bin/apktool
           sudo wget https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar -O /usr/local/bin/apktool.jar
@@ -39,7 +39,6 @@ jobs:
                   with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                       content = f.read()
                   
-                  # Safely strip incompatible attributes without breaking XML structure
                   content = re.sub(r"\s*android:featureFlag=\"[^\"]*\"", "", content)
                   content = re.sub(r"\s*android:dreamCategory=\"[^\"]*\"", "", content)
                   content = re.sub(r"\s*materialColor[a-zA-Z0-9]+=\"[^\"]*\"", "", content)
