@@ -1,1 +1,42 @@
+name: Patch SystemUI.apk
 
+on:
+  workflow_dispatch:
+
+jobs:
+  patch:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: 'a21s'
+
+      - name: Set up Java & Apktool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk wget
+          wget https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool -O /usr/local/bin/apktool
+          wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.9.3.jar -O /usr/local/bin/apktool.jar
+          chmod +x /usr/local/bin/apktool /usr/local/bin/apktool.jar
+
+      - name: Download SystemUI.apk from GoFile
+        run: |
+          wget -O SystemUI.apk "https://store-eu-par-13.gofile.io/download/web/f7dc38b8-752b-45a9-9ef2-7d46f4e57c0e/SystemUI.apk"
+
+      - name: Decompile SystemUI.apk
+        run: |
+          apktool d -f SystemUI.apk -o decompiled_ui
+
+      - name: Recompile and Sign SystemUI.apk
+        run: |
+          apktool b decompiled_ui -o patched_SystemUI.apk
+          wget https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -O signer.jar
+          java -jar signer.jar -apks patched_SystemUI.apk --allowResign
+
+      - name: Upload Patched SystemUI
+        uses: actions/upload-artifact@v4
+        with:
+          name: Patched-SystemUI-A21s
+          path: patched_SystemUI.apk
+          
