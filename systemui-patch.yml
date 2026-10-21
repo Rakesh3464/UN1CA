@@ -16,8 +16,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y openjdk-17-jdk wget
+          wget https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar -O /usr/local/bin/apktool.jar
           wget https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool -O /usr/local/bin/apktool
-          wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.9.3.jar -O /usr/local/bin/apktool.jar
           chmod +x /usr/local/bin/apktool /usr/local/bin/apktool.jar
 
       - name: Download SystemUI.apk from GoFile
@@ -39,3 +39,4 @@ jobs:
         with:
           name: Patched-SystemUI-A21s
           path: patched_SystemUI.apk
+          
