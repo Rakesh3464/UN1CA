@@ -32,14 +32,14 @@ jobs:
       - name: Fix Manifest Attribute Error
         run: |
           python3 -c '
-          import glob
+          import glob, re
           for filepath in glob.glob("decompiled_ui/**/AndroidManifest.xml", recursive=True):
               with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                  lines = f.readlines()
-              new_lines = [line for line in lines if "featureFlag" not in line]
+                  content = f.read()
+              content = re.sub(r"android:featureFlag=\"[^\"]*\"", "", content)
               with open(filepath, "w", encoding="utf-8") as f:
-                  f.writelines(new_lines)
-          print("Successfully removed featureFlag from manifests!")
+                  f.write(content)
+          print("Successfully stripped featureFlag attribute from manifests!")
           '
 
       - name: Recompile and Sign SystemUI.apk
