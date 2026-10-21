@@ -15,7 +15,12 @@ jobs:
       - name: Install Tools & Java
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk apktool wget
+          sudo apt-get install -y openjdk-17-jdk wget
+          # Install latest apktool wrapper and jar for modern One UI support
+          sudo wget https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool -O /usr/local/bin/apktool
+          sudo chmod +x /usr/local/bin/apktool
+          sudo wget https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar -O /usr/local/bin/apktool.jar
+          sudo chmod +x /usr/local/bin/apktool.jar
 
       - name: Download SystemUI.apk
         run: |
