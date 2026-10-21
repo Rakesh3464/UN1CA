@@ -29,10 +29,12 @@ jobs:
         run: |
           apktool d -f SystemUI.apk -o decompiled_ui
 
-      - name: Fix Manifest Attribute Error
+      - name: Remove Conflicting XML Files
         run: |
-          # Remove unsupported featureFlag attributes causing compilation failure
-          sed -i 's/android:featureFlag="[^"]*"/ /g' decompiled_ui/AndroidManifest.xml
+          # Delete the specific XML files causing incompatible attribute compilation errors
+          rm -f decompiled_ui/res/layout/media_projection_app_selector.xml
+          rm -f decompiled_ui/res/layout/shutdown_dialog_finder.xml
+          echo "Successfully removed conflicting XML files!"
 
       - name: Recompile and Sign SystemUI.apk
         run: |
