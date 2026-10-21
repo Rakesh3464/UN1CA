@@ -15,7 +15,7 @@ jobs:
       - name: Install Tools & Java
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk wget git
+          sudo apt-get install -y openjdk-17-jdk wget
           sudo wget https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool -O /usr/local/bin/apktool
           sudo chmod +x /usr/local/bin/apktool
           sudo wget https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar -O /usr/local/bin/apktool.jar
@@ -25,30 +25,26 @@ jobs:
         run: |
           wget -O SystemUI.apk "https://nei5-a0eace4761b8.herokuapp.com/stream/325311?hash=960c8a&d=true"
 
-      - name: Decompile SystemUI.apk (Preserve Resources)
+      - name: Decompile SystemUI.apk
         run: |
           apktool d -f SystemUI.apk -o decompiled_ui
+          # Backup the original layout xml that gets corrupted by regex stripping
+          cp decompiled_ui/res/layout/media_projection_app_selector.xml media_projection_app_selector.xml.bak || true
 
-      - name: Safely Clean Incompatible Attributes from All XMLs
+      - name: Safely Clean Manifest Only
         run: |
           python3 -c '
           import glob, re
-          files = glob.glob("decompiled_ui/**/*.xml", recursive=True)
-          for filepath in files:
-              try:
-                  with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                      content = f.read()
-                  
-                  content = re.sub(r"\s*android:featureFlag=\"[^\"]*\"", "", content)
-                  content = re.sub(r"\s*android:dreamCategory=\"[^\"]*\"", "", content)
-                  content = re.sub(r"\s*materialColor[a-zA-Z0-9]+=\"[^\"]*\"", "", content)
-                  
-                  with open(filepath, "w", encoding="utf-8") as f:
-                      f.write(content)
-              except Exception as e:
-                  pass
-          print("Successfully cleaned conflicting attributes from all XMLs!")
+          for filepath in glob.glob("decompiled_ui/**/AndroidManifest.xml", recursive=True):
+              with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                  content = f.read()
+              content = re.sub(r"\s*android:featureFlag=\"[^\"]*\"", "", content)
+              with open(filepath, "w", encoding="utf-8") as f:
+                  f.write(content)
+          print("Manifest cleaned successfully!")
           '
+          # Restore the clean layout xml to prevent any XML token/syntax error
+          [ -f media_projection_app_selector.xml.bak ] && cp media_projection_app_selector.xml.bak decompiled_ui/res/layout/media_projection_app_selector.xml || true
 
       - name: Recompile and Sign SystemUI.apk
         run: |
