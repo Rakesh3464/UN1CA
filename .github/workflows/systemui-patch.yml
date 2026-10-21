@@ -29,17 +29,22 @@ jobs:
         run: |
           apktool d -f SystemUI.apk -o decompiled_ui
 
-      - name: Fix Manifest Attribute Error
+      - name: Clean Unsupported Attributes
         run: |
           python3 -c '
           import glob, re
-          for filepath in glob.glob("decompiled_ui/**/AndroidManifest.xml", recursive=True):
-              with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                  content = f.read()
-              content = re.sub(r"android:featureFlag=\"[^\"]*\"", "", content)
-              with open(filepath, "w", encoding="utf-8") as f:
-                  f.write(content)
-          print("Successfully stripped featureFlag attribute from manifests!")
+          for filepath in glob.glob("decompiled_ui/**/*.xml", recursive=True):
+              try:
+                  with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                      content = f.read()
+                  # Remove incompatible material/featureFlag attributes causing build failure
+                  content = re.sub(r"android:featureFlag=\"[^\"]*\"", "", content)
+                  content = re.sub(r"materialColorOn[a-zA-Z0-9]+=\"[^\"]*\"", "", content)
+                  with open(filepath, "w", encoding="utf-8") as f:
+                      f.write(content)
+              except Exception as e:
+                  pass
+          print("Successfully cleaned conflicting attributes!")
           '
 
       - name: Recompile and Sign SystemUI.apk
